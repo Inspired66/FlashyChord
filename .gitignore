@@ -1,0 +1,14 @@
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+gradle.properties
+gradlew
+gradlew.bat
+gradle/
+app/src/main/assets/index.html
