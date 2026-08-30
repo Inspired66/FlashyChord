@@ -9,7 +9,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace 'com.flashychord.app'
+    namespace 'com.flashychord.myapp'
     compileSdk 35
 
     signingConfigs {
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.flashychord.app"
+        applicationId "com.flashychord.myapp"
         minSdk 24
         targetSdk 35
         versionCode 1
