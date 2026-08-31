@@ -9,9 +9,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
+        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
+            android:hardwareAccelerated="true"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="fullSensor">
