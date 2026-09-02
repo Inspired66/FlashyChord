@@ -161,6 +161,13 @@
       background:#222; border-radius:0 0 3px 3px; z-index:2;
     }
     .black-key.highlight { background:var(--hl-color); box-shadow:inset 0 0 6px rgba(0,0,0,0.4); }
+    .key-label {
+      position:absolute; bottom:3px; left:0; right:0;
+      text-align:center; font-size:0.55rem; font-weight:600;
+      color:rgba(0,0,0,0.28); letter-spacing:0.02em;
+      pointer-events:none; line-height:1; user-select:none;
+    }
+    .white-key.highlight .key-label { color:rgba(0,0,0,0.35); }
 
     #settingsToggle {
       position:fixed; bottom:14px; right:14px; z-index:40;
@@ -969,7 +976,7 @@
     </div>
 
     <div class="row">
-      <button class="toggle-btn" id="showKeysBtn">Show Notes</button>
+      <button class="toggle-btn" id="showKeysBtn">Show Keyboard</button>
       <button class="toggle-btn" id="arpeggioBtn">Arpeggiato</button>
       <button class="toggle-btn" id="motivateEnableBtn">Motivate Me</button>
     </div>
@@ -995,10 +1002,15 @@
       'E':'#10ac84','F':'#54a0ff','F#':'#5f27cd','G':'#a55eea',
       'Ab':'#ff9ff3','A':'#f368e0','Bb':'#ff6b81','B':'#48dbfb'
     };
+    // Octave-4 reference (C4–B4). Keyboard: semi 0 = C3, semi 12 = C4, semi 24 = C5.
     const noteFreq = {
       'C':261.63,'C#':277.18,'D':293.66,'Eb':311.13,'E':329.63,'F':349.23,
       'F#':369.99,'G':392.00,'Ab':415.30,'A':440.00,'Bb':466.16,'B':493.88
     };
+    // Hz for keyboard semi (MIDI 48 + semi; A4 = MIDI 69 = 440)
+    function freqFromSemi(semi) {
+      return 440 * Math.pow(2, (48 + semi - 69) / 12);
+    }
 
     // Ordered simplest / most common → rarer / more complex
     const qualityOrder = [
@@ -1091,8 +1103,8 @@
     let enabledRoots = new Set(noteNames);
     let enabledScales = new Set(['major']);
     let currentPreset = 'default';
-    let showKeysPermanently = false;
-    let arpeggioMode = false;
+    let showKeysPermanently = true;
+    let arpeggioMode = true;
     let volume = 0.7;
     let intervalMs = 3000;
 
@@ -1905,6 +1917,13 @@
         key.style.width = whiteWidth + '%';
         key.dataset.semi = semi;
         key.dataset.note = noteNames[semi % 12];
+        // Subtle C4 marker (semi 12 = middle C)
+        if (semi === 12) {
+          const label = document.createElement('span');
+          label.className = 'key-label';
+          label.textContent = 'C4';
+          key.appendChild(label);
+        }
         kb.appendChild(key);
       });
       const blackOffsets = [0.68,1.68,3.68,4.68,5.68];
@@ -1998,8 +2017,7 @@
       return best;
     }
 
-    function playSampleNote(ctx, noteName, startTime, duration, gainLevel) {
-      const targetHz = noteFreq[noteName] || 440;
+    function playSampleNote(ctx, targetHz, startTime, duration, gainLevel) {
       const key = nearestSampleKey(targetHz);
       if (!key || !pianoBuffers[key]) return false;
       const buf = pianoBuffers[key];
@@ -2021,14 +2039,13 @@
       return true;
     }
 
-    function playSynthNote(ctx, noteName, startTime, duration, gainLevel, partials) {
-      const baseFreq = noteFreq[noteName] || 440;
+    function playSynthNote(ctx, targetHz, startTime, duration, gainLevel, partials) {
       partials.forEach(p => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         const filter = ctx.createBiquadFilter();
         osc.type = 'sine';
-        osc.frequency.value = baseFreq * p.ratio;
+        osc.frequency.value = targetHz * p.ratio;
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(4000, startTime);
         filter.frequency.exponentialRampToValueAtTime(700, startTime + duration);
@@ -2042,39 +2059,40 @@
       });
     }
 
-    function playPianoChord(notes) {
+    // Play using the same keyboard semis as the highlighted keys (correct octave)
+    function playPianoChord(noteObjs) {
       const ctx = getAudioContext();
       loadPianoSamples(); // kick off / ensure loading
       const now = ctx.currentTime;
       // Longer sustain so chords bloom and ring
       const totalDuration = pianoSamplesReady ? 2.6 : 1.2;
       const vol = volume;
-      const sortedNotes = [...notes].sort((a, b) => (noteFreq[a] || 0) - (noteFreq[b] || 0));
+      const voiced = getVoicedNotes(noteObjs);
+      const sorted = [...voiced].sort((a, b) => a.hz - b.hz);
       const useSamples = pianoSamplesReady;
 
       if (arpeggioMode) {
         // Arpeggiato: tight roll (like a classical rolled chord), notes overlap and sustain together
-        const noteCount = sortedNotes.length || 1;
         const rollStep = 0.045; // ~45ms between notes — musical roll, not a slow arpeggio
-        sortedNotes.forEach((note, idx) => {
+        sorted.forEach((v, idx) => {
           const start = now + idx * rollStep;
           // slight accent on lower notes, all ring for nearly the full duration
           const g = vol * 0.88 * (1 - idx * 0.03);
           if (useSamples) {
-            playSampleNote(ctx, note, start, totalDuration - idx * rollStep * 0.15, g);
+            playSampleNote(ctx, v.hz, start, totalDuration - idx * rollStep * 0.15, g);
           } else {
-            playSynthNote(ctx, note, start, totalDuration - 0.2, g, [
+            playSynthNote(ctx, v.hz, start, totalDuration - 0.2, g, [
               {ratio:1,gain:0.32},{ratio:2,gain:0.16},{ratio:3,gain:0.08}
             ]);
           }
         });
       } else {
-        sortedNotes.forEach((note, idx) => {
+        sorted.forEach((v, idx) => {
           const g = vol * 0.82 * (1 - idx * 0.035);
           if (useSamples) {
-            playSampleNote(ctx, note, now, totalDuration, g);
+            playSampleNote(ctx, v.hz, now, totalDuration, g);
           } else {
-            playSynthNote(ctx, note, now, totalDuration, g, [
+            playSynthNote(ctx, v.hz, now, totalDuration, g, [
               {ratio:1,gain:0.27},{ratio:2,gain:0.15},{ratio:3,gain:0.08},{ratio:4,gain:0.045}
             ]);
           }
@@ -2208,22 +2226,73 @@
       }));
     }
 
+    // Single source of truth for keyboard voicing + sound.
+    // Prefer a root near C4 so voicings sit in a natural middle register;
+    // fall back lower/higher so the whole chord stays on the 0–24 keyboard.
+    function getVoicedNotes(noteObjs) {
+      if (!noteObjs || noteObjs.length === 0) return [];
+      const kb = document.getElementById('keyboard');
+      const rootNote = noteObjs[0].note;
+      const maxInterval = Math.max(...noteObjs.map(o => o.interval));
+      const PREFERRED = 12; // C4
+
+      const rootSemis = Array.from(kb.querySelectorAll(`[data-note="${rootNote}"]`))
+        .map(k => Number(k.dataset.semi))
+        .filter(s => !Number.isNaN(s))
+        .sort((a, b) => a - b);
+
+      let baseSemi;
+      if (rootSemis.length === 0) {
+        const pc = noteNames.indexOf(rootNote);
+        baseSemi = pc >= 0 ? ((pc + 12) % 12) + (PREFERRED - (PREFERRED % 12)) : PREFERRED;
+        // snap into 0..24
+        while (baseSemi > 24) baseSemi -= 12;
+        while (baseSemi < 0) baseSemi += 12;
+      } else {
+        // Candidates that keep the full chord on the keyboard
+        const fitting = rootSemis.filter(s => s + maxInterval <= 24 && s >= 0);
+        const pool = fitting.length ? fitting : rootSemis;
+        // Pick closest to C4 (semi 12)
+        baseSemi = pool.reduce((best, s) =>
+          Math.abs(s - PREFERRED) < Math.abs(best - PREFERRED) ? s : best
+        , pool[0]);
+      }
+
+      return noteObjs.map(obj => {
+        let targetSemi = baseSemi + obj.interval;
+        // Keep pitch class; fold by octaves only if off the board
+        while (targetSemi > 24) targetSemi -= 12;
+        while (targetSemi < 0) targetSemi += 12;
+        if (targetSemi > 24) targetSemi = 24;
+        if (targetSemi < 0) targetSemi = 0;
+        return {
+          note: obj.note,
+          semi: targetSemi,
+          hz: freqFromSemi(targetSemi)
+        };
+      });
+    }
+
     function highlightKeys(noteObjs, color) {
       const kb = document.getElementById('keyboard');
       kb.style.setProperty('--hl-color', color);
       kb.querySelectorAll('.white-key, .black-key').forEach(k => k.classList.remove('highlight'));
       if (!noteObjs || noteObjs.length === 0) return;
 
-      const rootNote = noteObjs[0].note;
-      const allRootKeys = Array.from(kb.querySelectorAll(`[data-note="${rootNote}"]`));
-      if (allRootKeys.length === 0) return;
-      const baseSemi = Number(allRootKeys[0].dataset.semi);
-
-      noteObjs.forEach(obj => {
-        let targetSemi = baseSemi + obj.interval;
-        if (targetSemi > 24) targetSemi = baseSemi + (obj.interval % 12);
-        let key = kb.querySelector(`[data-semi="${targetSemi}"]`);
-        if (!key) key = kb.querySelector(`[data-note="${obj.note}"]`);
+      const voiced = getVoicedNotes(noteObjs);
+      voiced.forEach(v => {
+        let key = kb.querySelector(`[data-semi="${v.semi}"]`);
+        if (!key) {
+          // Find any key with matching pitch class nearest to target semi
+          const candidates = Array.from(kb.querySelectorAll(`[data-note="${v.note}"]`));
+          if (candidates.length) {
+            key = candidates.reduce((best, k) => {
+              const d = Math.abs(Number(k.dataset.semi) - v.semi);
+              const bd = best ? Math.abs(Number(best.dataset.semi) - v.semi) : Infinity;
+              return d < bd ? k : best;
+            }, null);
+          }
+        }
         if (key) key.classList.add('highlight');
       });
     }
@@ -2362,7 +2431,7 @@
         }
 
         const noteObjs = getNotesWithPositions(current.root, current.quality);
-        playPianoChord(noteObjs.map(n => n.note));
+        playPianoChord(noteObjs);
 
         if (showKeysPermanently) {
           notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
@@ -2400,11 +2469,11 @@
       enabledQualities = getBasicQualities('major');
       currentPreset = 'default';
       intervalMs = 3000;
-      arpeggioMode = false;
-      showKeysPermanently = false;
+      arpeggioMode = true;
+      showKeysPermanently = true;
 
-      document.getElementById('arpeggioBtn').classList.remove('on', 'arpeggio');
-      document.getElementById('showKeysBtn').classList.remove('on');
+      document.getElementById('arpeggioBtn').classList.add('on', 'arpeggio');
+      document.getElementById('showKeysBtn').classList.add('on');
       document.getElementById('intervalBtn').textContent = 'Interval 3s ▾';
 
       buildRootChips();
@@ -2820,14 +2889,20 @@
       startComposerLoop();
       setTimeout(() => landingEl.remove(), 500);
     }
-    landingEl.addEventListener('click', dismissLanding);
+    landingEl.addEventListener('click', e => {
+      e.stopPropagation();
+      dismissLanding();
+    });
     landingEl.addEventListener('touchend', e => {
       e.preventDefault();
+      e.stopPropagation();
       dismissLanding();
     }, { passive: false });
 
     document.body.addEventListener('click', e => {
       if (!landingDismissed) return;
+      // Ignore residual events from the landing screen
+      if (e.target.closest('#landing')) return;
       if (e.target.closest('#bottom') || e.target.closest('#settingsToggle')) return;
       if (e.target.closest('#motivateWrap')) return;
       // Close motivate dropdown if open
