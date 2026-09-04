@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +20,8 @@
     }
 
     #topBar {
-      position:fixed; top:6px; left:0; right:0; z-index:20;
+      /* Portrait: lowered ~3 text lines so it sits clear of the top edge */
+      position:fixed; top:calc(6px + 3.15em); left:0; right:0; z-index:20;
       display:flex; flex-direction:column; align-items:flex-start;
       gap:3px; padding:0 12px;
       font-size:0.78rem; line-height:1.35;
@@ -49,17 +52,31 @@
       align-items:center;
       justify-content:center;
       padding:0.22em 0.42em;
-      min-width:1.6em;
+      min-width:2.4em;
+      min-height:1.15em;
       border:3.5px solid currentColor;
       background:transparent;
       position:relative;
-      z-index:1;
+      z-index:5;
+      /* transform used for Test Me drift — does not affect layout of roman/notes/keyboard/staff */
+      will-change: transform, opacity;
+      transform-origin: center center;
     }
     #chord .chord-inner {
       display:block;
       line-height:1;
       position:relative;
       z-index:2;
+    }
+    #chordSlot {
+      /* Fixed slot so shape/length changes don't shift roman, notes, keyboard, staff */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:clamp(4.6rem, 22vw, 13rem);
+      width:100%;
+      position:relative;
+      flex-shrink:0;
     }
 
     #chord.shape-maj { border-radius:0.22em; }
@@ -78,15 +95,17 @@
     }
     #chord.shape-sus {
       border:none;
-      padding:0.55em 0.55em 0.32em;
+      /* Match maj padding so layout height stays stable */
+      padding:0.22em 0.42em;
       background:transparent;
     }
     #chord.shape-sus::before {
       content:"";
       position:absolute;
-      top:-5px; left:-6px; right:-6px; bottom:-5px;
+      /* Tight house shape — peak sits inside the same box as other shapes */
+      top:-3px; left:-4px; right:-4px; bottom:-3px;
       background:currentColor;
-      clip-path:polygon(50% 0%, 100% 38%, 100% 100%, 0% 100%, 0% 38%);
+      clip-path:polygon(50% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%);
       z-index:0;
     }
     #chord.shape-sus::after {
@@ -94,7 +113,7 @@
       position:absolute;
       inset:0;
       background:var(--bg);
-      clip-path:polygon(50% 0%, 100% 38%, 100% 100%, 0% 100%, 0% 38%);
+      clip-path:polygon(50% 0%, 100% 28%, 100% 100%, 0% 100%, 0% 28%);
       z-index:1;
     }
     #chord.shape-dim {
@@ -128,28 +147,97 @@
       font-family:Georgia,"Times New Roman",serif;
       font-size:clamp(2.2rem,8.5vw,3.6rem); margin-top:0.25rem;
       opacity:0; transition:opacity 0.25s; font-weight:600;
-      color:#94a3b8; height:1.4em; letter-spacing:0.04em;
+      color:#94a3b8; height:1.4em; min-height:1.4em; letter-spacing:0.04em;
       visibility:hidden;
+      flex-shrink:0;
+      width:100%;
+      text-align:center;
     }
     #roman.visible { opacity:1; visibility:visible; }
     #notes {
       font-size:clamp(1rem,4vw,1.7rem); margin-top:0.25rem;
       opacity:0; transition:opacity 0.25s; font-weight:500;
-      text-align:center; height:1.3em;
+      text-align:center; height:1.3em; min-height:1.3em;
       visibility:hidden;
+      flex-shrink:0;
+      width:100%;
     }
     #notes.visible { opacity:1; visibility:visible; }
     #keyboard {
       /* Always in layout so vertical position stays fixed */
       display:block; position:relative;
-      width:min(88vw,380px); height:88px; margin-top:0.55rem;
+      width:min(88vw,380px); height:88px; min-height:88px; margin-top:0.55rem;
       background:#111; border-radius:6px;
       box-shadow:0 6px 18px rgba(0,0,0,0.5); overflow:hidden;
       visibility:hidden; opacity:0;
       transition:opacity 0.2s;
+      flex-shrink:0;
     }
     #keyboard.visible {
       visibility:visible; opacity:1;
+    }
+    #chordCol {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center;
+    }
+    #mainStage {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center;
+      width:100%;
+    }
+    #staff {
+      display:block; position:relative;
+      width:min(92vw,420px); height:200px; min-height:200px; margin-top:0.35rem;
+      background:transparent; border-radius:8px;
+      overflow:visible;
+      visibility:hidden; opacity:0;
+      transition:opacity 0.2s;
+      flex-shrink:0;
+    }
+    #staff.visible {
+      visibility:visible; opacity:1;
+    }
+    #staff svg {
+      width:100%; height:100%; display:block;
+    }
+    /* Portrait + staff: fixed chord slot height so staff stays put; staff centred */
+    body.staff-portrait #mainStage {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    body.staff-portrait #chordCol {
+      width:100%;
+      align-items:center;
+      flex-shrink:0;
+    }
+    body.staff-portrait #chordSlot {
+      /* Stable height so longer chord names don't push the staff up/down */
+      min-height:clamp(5.2rem, 24vw, 13.5rem);
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    body.staff-portrait #staff {
+      width:min(88vw, 400px);
+      max-width:88vw;
+      margin-left:auto !important;
+      margin-right:auto !important;
+      align-self:center;
+      position:relative;
+      left:0;
+      right:0;
+      transform:none;
+      display:block;
+    }
+    body.staff-portrait #staff svg {
+      margin-left:auto;
+      margin-right:auto;
     }
     .white-key {
       position:absolute; bottom:0; height:100%;
@@ -185,7 +273,8 @@
 
     #bottom {
       position:fixed; bottom:0; left:0; right:0;
-      background:var(--panel); padding:10px 6px 18px; z-index:30;
+      /* Extra ~1 button-row of blank space at the bottom */
+      background:var(--panel); padding:10px 6px 56px; z-index:30;
       display:flex; flex-direction:column; gap:8px;
       transform:translateY(110%);
       transition:transform 0.32s cubic-bezier(0.22,1,0.36,1);
@@ -227,7 +316,8 @@
       border-radius:12px; padding:12px;
       min-width:min(92vw, 320px);
       max-width:min(96vw, 420px);
-      max-height:min(45vh, 300px);
+      /* Portrait: half previous height; scroll for the rest */
+      max-height:min(22.5vh, 150px);
       overflow-y:auto; z-index:80;
       box-shadow:0 12px 36px rgba(0,0,0,0.6);
       -webkit-overflow-scrolling:touch;
@@ -295,11 +385,12 @@
     @media (orientation:landscape) and (max-height:500px) {
       body {
         justify-content:flex-start;
-        padding-top:4.5vh;
+        padding-top:2px;
+        padding-bottom:0;
         padding-right:0;
       }
       #topBar {
-        top:6px; left:0; right:auto;
+        top:calc(6px + 2.1em); left:0; right:auto;
         width:min(30vw, 220px);
         max-width:min(30vw, 220px);
         font-size:0.72rem;
@@ -312,19 +403,182 @@
         overflow-wrap:break-word;
         word-wrap:break-word;
       }
+      /* ~10% larger type; double spacing between chord / Roman / notes */
       #chord {
-        font-size:clamp(5.2rem,25vh,12.5rem);
-        margin-top:1.2vh;
+        font-size:clamp(3.74rem,17.6vh,8.25rem);
+        margin-top:0;
       }
-      #roman { font-size:clamp(2.0rem,7.5vh,3.5rem); height:1.3em; }
-      #notes { font-size:clamp(0.9rem,3.2vh,1.3rem); height:1.2em; }
+      #chordSlot {
+        min-height:clamp(3.5rem,16.5vh,9rem);
+      }
+      #roman {
+        font-size:clamp(1.49rem,5.5vh,2.53rem);
+        height:1.35em; min-height:1.35em;
+        margin-top:0.5rem; /* double line spacing */
+      }
+      #notes {
+        font-size:clamp(0.79rem,2.86vh,1.16rem);
+        height:1.25em; min-height:1.25em;
+        margin-top:0.5rem; /* double line spacing */
+      }
       #keyboard {
-        height:58px;
-        width:min(68vw,380px);
-        margin-top:0.3rem;
+        height:46px;
+        width:min(62vw,340px);
+        margin-top:0.18rem;
+      }
+      /* Pin keyboard to the bottom edge of the screen in landscape */
+      #keyboard.visible {
+        position:fixed;
+        bottom:0;
+        left:50%;
+        transform:translateX(-50%);
+        margin-top:0;
+        z-index:25;
+        border-radius:8px 8px 0 0;
+        width:min(70vw, 380px);
+      }
+      /* Non-staff landscape defaults */
+      body:not(.staff-landscape) {
+        align-items:center;
+        padding-bottom:0;
+      }
+      body:not(.staff-landscape) #mainStage {
+        align-items:center;
+        width:100%;
+        box-sizing:border-box;
+      }
+      body:not(.staff-landscape) #chordCol {
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+      }
+      /* Keyboard on: lower the chord block (clear of top, above fixed keyboard) */
+      body.keyboard-landscape {
+        justify-content:flex-start;
+        padding-top:16vh;
+      }
+      body.keyboard-landscape #mainStage {
+        justify-content:flex-start;
+        min-height:0;
+        padding-top:0;
+        padding-bottom:52px; /* keep clear of fixed keyboard at bottom */
+        margin-top:0;
+      }
+      body.keyboard-landscape #chordCol {
+        justify-content:flex-start;
+        margin-top:0;
+        padding-top:0;
+      }
+      body.keyboard-landscape #chordSlot {
+        min-height:0;
+        margin-top:0;
+        padding-top:0;
+      }
+      body.keyboard-landscape #chord {
+        margin-top:0;
+      }
+      /* Neither keyboard nor staff: true centre of chord+roman+notes on screen */
+      body:not(.staff-landscape):not(.keyboard-landscape) {
+        justify-content:center;
+        padding-top:0;
+      }
+      body:not(.staff-landscape):not(.keyboard-landscape) #mainStage {
+        justify-content:center;
+        min-height:0;
+        height:0;
+        padding:0;
+        margin:0;
+        overflow:visible;
+      }
+      /* Hidden keyboard/staff must not take layout space or the block won't centre.
+         Allow .visible so pause can still reveal the keyboard. */
+      body:not(.staff-landscape):not(.keyboard-landscape) #keyboard:not(.visible),
+      body:not(.staff-landscape):not(.keyboard-landscape) #staff:not(.visible) {
+        display:none !important;
+        height:0 !important;
+        min-height:0 !important;
+        margin:0 !important;
+      }
+      body:not(.staff-landscape):not(.keyboard-landscape) #chordCol {
+        position:fixed;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%);
+        justify-content:center;
+        z-index:5;
+        width:max-content;
+        max-width:min(92vw, 100%);
+        overflow:visible;
+      }
+      body:not(.staff-landscape):not(.keyboard-landscape) #chordSlot {
+        min-height:0;
+        overflow:visible;
+      }
+      body:not(.staff-landscape):not(.keyboard-landscape) #roman,
+      body:not(.staff-landscape):not(.keyboard-landscape) #notes {
+        width:max-content;
+        max-width:92vw;
+        min-width:100%;
+        white-space:nowrap;
+        overflow:visible;
+        position:relative;
+        z-index:6;
+      }
+      #staff {
+        height:160px;
+        width:min(48vw,420px);
+        margin-top:0;
+      }
+      /* Chord left, grand staff right — balanced pair, shifted right */
+      body.staff-landscape {
+        justify-content:center;
+        padding-top:10vh;
+        padding-bottom:8vh;
+        padding-left:0;
+        padding-right:0;
+      }
+      body.staff-landscape #mainStage {
+        flex-direction:row;
+        align-items:center;
+        justify-content:center;
+        gap:0;
+        padding:0;
+        width:100%;
+        max-width:100%;
+        margin:0;
+        box-sizing:border-box;
+        position:relative;
+        min-height:60vh;
+      }
+      /* Chord centre at 1/4 from the left edge */
+      body.staff-landscape #chordCol {
+        position:fixed;
+        left:25vw;
+        top:50%;
+        transform:translate(-50%, -50%);
+        max-width:36vw;
+        z-index:5;
+      }
+      body.staff-landscape #chord {
+        font-size:clamp(3.8rem,18vh,9rem);
+        margin-top:0;
+      }
+      /* Staff centre at 1/4 from the right edge (3/4 from left) */
+      body.staff-landscape #staff {
+        position:fixed;
+        left:75vw;
+        top:50%;
+        transform:translate(-50%, -50%);
+        height:min(48vh, 220px);
+        width:min(48vw, 440px);
+        margin:0;
+        z-index:4;
+      }
+      body.staff-landscape #keyboard {
+        display:none;
       }
       #settingsToggle {
-        bottom:auto; top:12px; right:12px;
+        bottom:12px; top:auto; right:48px;
         width:40px; height:40px; font-size:1.2rem;
       }
       #bottom {
@@ -341,6 +595,13 @@
         transform:translateX(0);
       }
       #bottom .panel-handle { display:none; }
+      #bottom .section {
+        padding: 4px 0 6px;
+      }
+      #bottom .section-label {
+        font-size: 0.62rem;
+        padding: 0 2px;
+      }
       #bottom .row {
         flex-direction:column; align-items:flex-start; gap:5px; width:100%;
       }
@@ -387,55 +648,76 @@
       .floating-composer { width: 56px; height: 56px; }
     }
 
-    /* Motivate Me — dropdown + corner comments */
-    #motivateWrap {
+    /* Floating Test Me — bottom-left (replaces old Motivate float) */
+    #testMeWrap {
       position: fixed; bottom: 14px; left: 14px; z-index: 40;
-      display: none;
+      display: block;
     }
-    #motivateWrap.visible { display: block; }
-
-    #motivateToggle {
+    #testMeToggle {
       height: 46px; padding: 0 14px; border-radius: 999px;
       background: #2a2a4a; color: #eee; border: 1px solid #555;
       font-size: 0.82rem; font-weight: 700; cursor: pointer;
       box-shadow: 0 4px 16px rgba(0,0,0,0.45);
       display: flex; align-items: center; gap: 6px;
-      transition: background 0.15s, transform 0.15s;
+      transition: background 0.15s, transform 0.15s, border-color 0.15s;
     }
-    #motivateToggle:active { transform: scale(0.96); }
-    #motivateToggle.active,
-    #motivateWrap.running #motivateToggle {
-      background: #7c3aed; border-color: #c4b5fd;
+    #testMeToggle:active { transform: scale(0.96); }
+    #testMeToggle.open {
+      background: #3b82f6; border-color: #93c5fd;
     }
-
-    #motivateDropdown {
+    #testMeToggle.live {
+      background: #7c3aed; border-color: #e9d5ff;
+      color: #fff;
+      animation: testMeFlash 0.85s ease-in-out infinite;
+    }
+    @keyframes testMeFlash {
+      0%, 100% {
+        transform: scale(1);
+        background: #7c3aed;
+        border-color: #e9d5ff;
+        box-shadow:
+          0 0 0 0 rgba(167, 139, 250, 0.9),
+          0 0 18px 4px rgba(124, 58, 237, 0.65),
+          0 4px 16px rgba(0,0,0,0.45);
+      }
+      50% {
+        transform: scale(1.08);
+        background: #a855f7;
+        border-color: #f5d0fe;
+        box-shadow:
+          0 0 0 14px rgba(167, 139, 250, 0),
+          0 0 28px 8px rgba(192, 132, 252, 0.85),
+          0 4px 16px rgba(0,0,0,0.45);
+      }
+    }
+    #testMeDropdown {
       display: none;
       position: absolute; bottom: 110%; left: 0;
-      min-width: 180px;
+      min-width: 168px;
       background: #1e1e3a; border: 1px solid #555;
       border-radius: 12px; padding: 6px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       z-index: 41;
     }
-    #motivateWrap.open #motivateDropdown { display: block; }
-    #motivateDropdown button {
+    #testMeWrap.open #testMeDropdown { display: block; }
+    #testMeDropdown button {
       display: block; width: 100%;
       border: none; border-radius: 8px; padding: 10px 12px;
       font-size: 0.85rem; font-weight: 700; cursor: pointer;
       text-align: left; margin: 0; background: transparent; color: #eee;
     }
-    #motivateDropdown button:hover { background: #2a2a4a; }
-    #motivateDropdown .carrot-btn { color: #4ade80; }
-    #motivateDropdown .stick-btn { color: #f87171; }
-    #motivateDropdown .stop-btn { color: #94a3b8; font-weight: 600; }
-    #motivateDropdown .sep {
+    #testMeDropdown button:hover { background: #2a2a4a; }
+    #testMeDropdown button.on {
+      background: #3b82f6; color: #fff;
+    }
+    #testMeDropdown .sep {
       height: 1px; background: #444; margin: 4px 6px;
     }
 
-    /* Portrait: top strip under status — stays above chord */
+    /* Portrait: motivation comments lower so they clear the status strip */
     #motivateMsg {
       position: fixed;
-      top: 36px;
+      top: 96px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 20;
@@ -750,19 +1032,19 @@
     #screenTint.carrot-tint { background: rgba(34, 197, 94, 0.12); }
     #screenTint.stick-tint { background: rgba(185, 28, 28, 0.18); }
 
-    /* Landscape: comments on the right; motivate button stays bottom-left */
+    /* Landscape: Test Me float + comments on the right */
     @media (orientation: landscape) and (max-height: 500px) {
-      #motivateWrap {
-        top: auto; bottom: 12px; left: 12px;
+      #testMeWrap {
+        top: auto; bottom: 12px; left: 48px;
       }
-      #motivateToggle {
+      #testMeToggle {
         height: 40px; font-size: 0.78rem; padding: 0 12px;
       }
-      #motivateDropdown {
+      #testMeDropdown {
         bottom: 110%; top: auto;
       }
       #motivateMsg {
-        top: 52px;
+        top: 64px;
         left: auto;
         right: 12px;
         transform: none;
@@ -773,6 +1055,41 @@
         text-align: left;
         line-height: 1.35;
       }
+    }
+
+    /* Settings panel section labels */
+    #bottom .section-label {
+      width: 100%;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      opacity: 0.85;
+      padding: 2px 4px 0;
+      margin: 2px 0 0;
+      text-align: left;
+    }
+    #bottom .section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      padding: 6px 4px 8px;
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+    #bottom .section:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+    #bottom .section .row {
+      justify-content: flex-start;
+    }
+    .motivate-mode-btn.on.carrot {
+      background: #15803d; border-color: #4ade80;
+    }
+    .motivate-mode-btn.on.stick {
+      background: #b91c1c; border-color: #f87171;
     }
 
     /* ——— Landing screen ——— */
@@ -910,16 +1227,16 @@
       <h1>Flashy Chord</h1>
       <p class="tagline">Train your eyes, ears &amp; hands — one chord at a time</p>
       <div class="landing-body">
-        <p>Random chords flash on screen with optional Roman numerals, keyboard highlights, and real piano sound. Practice recognition and shapes until they feel automatic.</p>
+        <p>Random chords flash on screen with optional Roman numerals, keyboard or staff, and real piano sound. Practice recognition until symbols, shapes and colours feel automatic.</p>
       </div>
       <ul class="benefits">
-        <li><span class="bi">👀</span><span><strong>See it faster</strong> — instant recognition of chord symbols &amp; qualities</span></li>
-        <li><span class="bi">🖐️</span><span><strong>Find it faster</strong> — map shapes to the keyboard under your fingers</span></li>
-        <li><span class="bi">👂</span><span><strong>Hear it clearer</strong> — sampled piano so colour and tension stick</span></li>
+        <li><span class="bi">👀</span><span><strong>See it</strong> — staff notation; quiz yourself before the symbol appears</span></li>
+        <li><span class="bi">👆</span><span><strong>Touch it</strong> — keyboard under your fingers; name the chord late in the beat</span></li>
+        <li><span class="bi">👂</span><span><strong>Hear it</strong> — sound only, then check the symbol near the end of each interval</span></li>
         <li><span class="bi">📚</span><span><strong>Build the toolkit</strong> — triads to altered dominants, any key or scale</span></li>
       </ul>
       <div class="cta">Tap anywhere to start</div>
-      <p class="hint">⚙ Settings · ✨ Motivate Me · pause anytime by tapping the chord</p>
+      <p class="hint">⚙ Settings · 🧪 Test Me · ✨ Motivate · pause anytime</p>
     </div>
   </div>
   <div id="topBar">
@@ -927,71 +1244,119 @@
     <span class="sep">·</span>
     <span id="status"></span>
   </div>
-  <div id="chord" class="shape-maj"><span class="chord-inner">C</span></div>
-  <div id="roman"></div>
-  <div id="notes"></div>
-  <div id="keyboard"></div>
+  <div id="mainStage">
+    <div id="chordCol">
+      <div id="chordSlot">
+        <div id="chord" class="shape-maj"><span class="chord-inner">C</span></div>
+      </div>
+      <div id="roman"></div>
+      <div id="notes"></div>
+    </div>
+    <div id="keyboard"></div>
+    <div id="staff" aria-hidden="true"></div>
+  </div>
 
   <button id="settingsToggle" type="button" aria-label="Open settings" title="Settings">⚙</button>
 
-  <div id="motivateWrap">
-    <button id="motivateToggle" type="button" title="Motivate Me">✨ Motivate ▾</button>
-    <div id="motivateDropdown">
-      <button type="button" class="carrot-btn" id="carrotBtn">🥕 Carrot</button>
-      <button type="button" class="stick-btn" id="stickBtn">🏏 Stick</button>
-      <div class="sep"></div>
-      <button type="button" class="stop-btn" id="motivateStopBtn">Stop comments</button>
+  <div id="testMeWrap">
+    <button id="testMeToggle" type="button" title="Test Me">🧪 Test Me ▾</button>
+    <div id="testMeDropdown">
+      <button type="button" data-mode="off" class="on">Off</button>
+      <button type="button" data-mode="hear">👂 Hear</button>
+      <button type="button" data-mode="see">👀 See</button>
+      <button type="button" data-mode="touch">👆 Touch</button>
     </div>
   </div>
   <div id="motivateMsg" aria-live="polite"></div>
 
   <div id="bottom">
     <div class="panel-handle"></div>
-    <div class="row">
-      <button class="preset-btn active" id="defaultBtn">Default</button>
-      <button class="preset-btn" id="triadsOnlyBtn">Triads Only</button>
-      <button class="preset-btn" id="allTypesBtn">All Chord Types</button>
-    </div>
 
-    <div class="row">
-      <div class="dropdown" id="rootDropdown">
-        <button class="dropdown-btn" id="rootBtn">Keys ▾</button>
-        <div class="dropdown-panel" id="roots"></div>
-      </div>
-      <div class="dropdown" id="scaleDropdown">
-        <button class="dropdown-btn" id="scaleBtn">Scales ▾</button>
-        <div class="dropdown-panel" id="scales"></div>
+    <div class="section">
+      <div class="section-label">Presets</div>
+      <div class="row">
+        <button class="preset-btn active" id="defaultBtn">Default</button>
+        <button class="preset-btn" id="triadsOnlyBtn">Triads Only</button>
+        <button class="preset-btn" id="allTypesBtn">All Chord Types</button>
       </div>
     </div>
 
-    <div class="row">
-      <div class="dropdown" id="typeDropdown">
-        <button class="dropdown-btn" id="typeBtn">Chord Type ▾</button>
-        <div class="dropdown-panel" id="types"></div>
-      </div>
-      <div class="dropdown" id="degDropdown">
-        <button class="dropdown-btn" id="degBtn">Roman Numerals ▾</button>
-        <div class="dropdown-panel" id="degrees"></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <button class="toggle-btn" id="showKeysBtn">Show Keyboard</button>
-      <button class="toggle-btn" id="arpeggioBtn">Arpeggiato</button>
-      <button class="toggle-btn" id="motivateEnableBtn">Motivate Me</button>
-    </div>
-
-    <div class="row">
-      <div class="dropdown" id="intervalDropdown">
-        <button class="dropdown-btn" id="intervalBtn">Interval 3s ▾</button>
-        <div class="dropdown-panel" id="intervals"></div>
+    <div class="section">
+      <div class="section-label">Keys &amp; Scales</div>
+      <div class="row">
+        <div class="dropdown" id="rootDropdown">
+          <button class="dropdown-btn" id="rootBtn">Keys ▾</button>
+          <div class="dropdown-panel" id="roots"></div>
+        </div>
+        <div class="dropdown" id="scaleDropdown">
+          <button class="dropdown-btn" id="scaleBtn">Scales ▾</button>
+          <div class="dropdown-panel" id="scales"></div>
+        </div>
       </div>
     </div>
 
-    <div class="row vol-row">
-      <span class="vol-label">Vol</span>
-      <input type="range" id="volumeSlider" min="0" max="100" value="70">
-      <span class="vol-label" id="volValue">70</span>
+    <div class="section">
+      <div class="section-label">Chords</div>
+      <div class="row">
+        <div class="dropdown" id="typeDropdown">
+          <button class="dropdown-btn" id="typeBtn">Chord Type ▾</button>
+          <div class="dropdown-panel" id="types"></div>
+        </div>
+        <div class="dropdown" id="degDropdown">
+          <button class="dropdown-btn" id="degBtn">Roman Numerals ▾</button>
+          <div class="dropdown-panel" id="degrees"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Display</div>
+      <div class="row">
+        <button class="toggle-btn" id="showKeysBtn">Keyboard</button>
+        <button class="toggle-btn" id="showStaffBtn">Staff</button>
+        <button class="toggle-btn" id="arpeggioBtn">Arpeggiato</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Timing</div>
+      <div class="row">
+        <div class="dropdown" id="intervalDropdown">
+          <button class="dropdown-btn" id="intervalBtn">Interval 3s ▾</button>
+          <div class="dropdown-panel" id="intervals"></div>
+        </div>
+        <button class="toggle-btn" id="metroBtn">Metronome</button>
+        <div class="dropdown" id="metroClicksDropdown">
+          <button class="dropdown-btn" id="metroClicksBtn">Clicks 4 ▾</button>
+          <div class="dropdown-panel" id="metroClicks"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Sound</div>
+      <div class="row">
+        <button class="toggle-btn on" id="soundBtn" title="Toggle piano samples vs synth">Piano</button>
+      </div>
+      <div class="row vol-row">
+        <span class="vol-label">Vol</span>
+        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+        <span class="vol-label" id="volValue">70</span>
+      </div>
+      <div class="row vol-row" id="metroVolRow" style="display:none;">
+        <span class="vol-label">Metro</span>
+        <input type="range" id="metroVolSlider" min="0" max="100" value="45">
+        <span class="vol-label" id="metroVolValue">45</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Motivate</div>
+      <div class="row">
+        <button class="toggle-btn" id="motivateEnableBtn">Off</button>
+        <button class="toggle-btn motivate-mode-btn" id="carrotBtn">🥕 Carrot</button>
+        <button class="toggle-btn motivate-mode-btn" id="stickBtn">🏏 Stick</button>
+      </div>
     </div>
   </div>
 
@@ -1103,10 +1468,24 @@
     let enabledRoots = new Set(noteNames);
     let enabledScales = new Set(['major']);
     let currentPreset = 'default';
-    let showKeysPermanently = true;
+    let displayMode = 'keyboard'; // 'none' | 'keyboard' | 'staff'
+    let displayModeBeforeTest = 'keyboard';
+    let testMode = 'off'; // 'off' | 'hear' | 'see' | 'touch'
+    let testRevealTimer = null;
+    let testDriftTimer = null;
     let arpeggioMode = true;
     let volume = 0.7;
     let intervalMs = 3000;
+    let soundMode = 'piano'; // 'piano' | 'synth'
+    let metroEnabled = false;
+    let metroVolume = 0.45;
+    let metroClicksPerInterval = 4; // 1–8 clicks within each chord interval
+    let metroTimer = null;
+    let metroNextTick = 0;
+    let metroBeatCount = 0;
+    // performance.now() when the current flash session started (showChord scheduled).
+    // Chord sound onset = this + CHORD_ONSET_DELAY_MS. Metronome phase locks to it.
+    let chordPhaseOriginMs = 0;
 
     // Public-domain / Commons portraits + a few humour faces
     // Appear on average every ~2.5 seconds
@@ -1250,7 +1629,7 @@
     }
 
     // ——— Motivate Me: carrot & stick ———
-    let motivateEnabled = true;
+    let motivateEnabled = false; // default Off; exclusive with carrot/stick
     let motivateMode = null; // 'carrot' | 'stick' | null
     let lastCarrotIdx = -1;
     let lastStickIdx = -1;
@@ -1461,8 +1840,8 @@
       const el = document.getElementById('motivateMsg');
       el.classList.remove('visible', 'carrot', 'stick');
       el.textContent = '';
-      document.getElementById('motivateWrap').classList.remove('running');
-      updateMotivateLabel();
+      updateMotivateButtons();
+      updateInfo();
     }
 
     function scheduleNextMotivateComment() {
@@ -1518,10 +1897,10 @@
         boratEggPlayed = false;
         carrotMilestones = new Set();
       }
-      document.getElementById('motivateWrap').classList.add('running');
-      updateMotivateLabel();
+      updateMotivateButtons();
       showMotivateCommentOnce();
       scheduleNextMotivateComment();
+      updateInfo();
     }
 
     function triggerModeEgg(mode, face, caption, bits) {
@@ -1753,23 +2132,39 @@
       }, 9200);
     }
 
-    function updateMotivateLabel() {
-      const btn = document.getElementById('motivateToggle');
-      if (motivateMode === 'carrot') btn.textContent = '🥕 Carrot ▾';
-      else if (motivateMode === 'stick') btn.textContent = '🏏 Stick ▾';
-      else btn.textContent = '✨ Motivate ▾';
+    function updateMotivateButtons() {
+      const offBtn = document.getElementById('motivateEnableBtn');
+      const carrotBtn = document.getElementById('carrotBtn');
+      const stickBtn = document.getElementById('stickBtn');
+      // Exclusive: only one of Off / Carrot / Stick highlighted
+      if (offBtn) offBtn.classList.toggle('on', !motivateMode);
+      if (carrotBtn) {
+        carrotBtn.classList.toggle('on', motivateMode === 'carrot');
+        carrotBtn.classList.toggle('carrot', motivateMode === 'carrot');
+      }
+      if (stickBtn) {
+        stickBtn.classList.toggle('on', motivateMode === 'stick');
+        stickBtn.classList.toggle('stick', motivateMode === 'stick');
+      }
+    }
+
+    function setMotivateChoice(choice) {
+      // choice: null | 'carrot' | 'stick'
+      if (choice === 'carrot' || choice === 'stick') {
+        motivateEnabled = true;
+        startMotivateMode(choice);
+      } else {
+        motivateEnabled = false;
+        stopMotivateLoop();
+      }
+      updateMotivateButtons();
+      updateInfo();
     }
 
     function setMotivateEnabled(on) {
-      motivateEnabled = on;
-      const wrap = document.getElementById('motivateWrap');
-      const enableBtn = document.getElementById('motivateEnableBtn');
-      wrap.classList.toggle('visible', on);
-      enableBtn.classList.toggle('on', on);
-      if (!on) {
-        wrap.classList.remove('open');
-        stopMotivateLoop();
-      }
+      // Compat: treat as Off vs leave current mode
+      if (!on) setMotivateChoice(null);
+      else if (!motivateMode) setMotivateChoice('carrot');
     }
 
     function getBasicQualities(scaleType) {
@@ -2062,14 +2457,14 @@
     // Play using the same keyboard semis as the highlighted keys (correct octave)
     function playPianoChord(noteObjs) {
       const ctx = getAudioContext();
-      loadPianoSamples(); // kick off / ensure loading
+      if (soundMode === 'piano') loadPianoSamples(); // kick off / ensure loading
       const now = ctx.currentTime;
+      const useSamples = soundMode === 'piano' && pianoSamplesReady;
       // Longer sustain so chords bloom and ring
-      const totalDuration = pianoSamplesReady ? 2.6 : 1.2;
+      const totalDuration = useSamples ? 2.6 : 1.2;
       const vol = volume;
       const voiced = getVoicedNotes(noteObjs);
       const sorted = [...voiced].sort((a, b) => a.hz - b.hz);
-      const useSamples = pianoSamplesReady;
 
       if (arpeggioMode) {
         // Arpeggiato: tight roll (like a classical rolled chord), notes overlap and sustain together
@@ -2226,9 +2621,9 @@
       }));
     }
 
-    // Single source of truth for keyboard voicing + sound.
-    // Prefer a root near C4 so voicings sit in a natural middle register;
-    // fall back lower/higher so the whole chord stays on the 0–24 keyboard.
+    // Single source of truth for voicing (staff, keyboard, sound).
+    // Prefer a root near C4. Returned semis keep true intervals (may exceed 0–24)
+    // so staff notation and sounding pitch stay correct (e.g. Bm9’s C# is a 9th above, not folded down).
     function getVoicedNotes(noteObjs) {
       if (!noteObjs || noteObjs.length === 0) return [];
       const kb = document.getElementById('keyboard');
@@ -2244,33 +2639,38 @@
       let baseSemi;
       if (rootSemis.length === 0) {
         const pc = noteNames.indexOf(rootNote);
-        baseSemi = pc >= 0 ? ((pc + 12) % 12) + (PREFERRED - (PREFERRED % 12)) : PREFERRED;
-        // snap into 0..24
-        while (baseSemi > 24) baseSemi -= 12;
+        baseSemi = pc >= 0 ? pc + 12 : PREFERRED; // prefer octave around C4
+        while (baseSemi > 19) baseSemi -= 12;
         while (baseSemi < 0) baseSemi += 12;
       } else {
-        // Candidates that keep the full chord on the keyboard
+        // Prefer roots that keep as much of the chord on the 0–24 keyboard as possible,
+        // but still pick closest to C4. Wide chords (9ths, etc.) may extend above C5.
         const fitting = rootSemis.filter(s => s + maxInterval <= 24 && s >= 0);
         const pool = fitting.length ? fitting : rootSemis;
-        // Pick closest to C4 (semi 12)
         baseSemi = pool.reduce((best, s) =>
           Math.abs(s - PREFERRED) < Math.abs(best - PREFERRED) ? s : best
         , pool[0]);
       }
 
       return noteObjs.map(obj => {
-        let targetSemi = baseSemi + obj.interval;
-        // Keep pitch class; fold by octaves only if off the board
-        while (targetSemi > 24) targetSemi -= 12;
-        while (targetSemi < 0) targetSemi += 12;
-        if (targetSemi > 24) targetSemi = 24;
-        if (targetSemi < 0) targetSemi = 0;
+        // Do NOT fold by octave — staff and sound need true stacked intervals
+        const targetSemi = baseSemi + obj.interval;
         return {
           note: obj.note,
           semi: targetSemi,
           hz: freqFromSemi(targetSemi)
         };
       });
+    }
+
+    /** Map a true semi onto the on-screen keyboard (0–24) by nearest pitch-class key */
+    function clampSemiToKeyboard(semi) {
+      let s = semi;
+      while (s > 24) s -= 12;
+      while (s < 0) s += 12;
+      if (s > 24) s = 24;
+      if (s < 0) s = 0;
+      return s;
     }
 
     function highlightKeys(noteObjs, color) {
@@ -2281,7 +2681,8 @@
 
       const voiced = getVoicedNotes(noteObjs);
       voiced.forEach(v => {
-        let key = kb.querySelector(`[data-semi="${v.semi}"]`);
+        const want = clampSemiToKeyboard(v.semi);
+        let key = kb.querySelector(`[data-semi="${want}"]`);
         if (!key) {
           // Find any key with matching pitch class nearest to target semi
           const candidates = Array.from(kb.querySelectorAll(`[data-note="${v.note}"]`));
@@ -2297,6 +2698,178 @@
       });
     }
 
+    // Staff steps relative to C (diatonic) + accidental for our note-name spelling
+    const STAFF_STEP = { C:0, 'C#':0, D:1, Eb:2, E:2, F:3, 'F#':3, G:4, Ab:5, A:5, Bb:6, B:6 };
+    const STAFF_ACC  = { C:null, 'C#':'♯', D:null, Eb:'♭', E:null, F:null, 'F#':'♯', G:null, Ab:'♭', A:null, Bb:'♭', B:null };
+
+    /**
+     * Grand staff: treble above, bass below — true written octaves (matches sounding pitch).
+     * Notes at/above C4 (semi 12) go on treble; below C4 on bass.
+     */
+    function renderStaff(noteObjs, color) {
+      const el = document.getElementById('staff');
+      if (!el) return;
+      const voiced = getVoicedNotes(noteObjs || []);
+      // Test Me: noteheads match staff-line colour (no root colour giveaway)
+      const STAFF_LINE = '#c5c5d5';
+      const noteColor = (typeof testMode !== 'undefined' && testMode !== 'off') ? STAFF_LINE : color;
+      // Symmetric horizontal geometry (no brace) so the system centres in the box
+      const W = 300, H = 210;
+      const sidePad = 18;          // equal left/right margin of the viewBox
+      const clefW = 36;            // space reserved for clef glyphs inside the system
+      const lineLeft = sidePad + clefW;
+      const lineRight = W - sidePad;
+      const stepPx = 7;
+      // Treble: bottom line E4 = 9 diatonic steps from C3
+      // Bass:   bottom line G2 = -3 steps from C3
+      const trebleBottomY = 72;
+      const bassBottomY = 168;
+      const trebleRef = 9;
+      const bassRef = -3;
+
+      function stepsFromC3(semi) {
+        const note = noteNames[((semi % 12) + 12) % 12];
+        const octFromC3 = Math.floor(semi / 12);
+        return octFromC3 * 7 + STAFF_STEP[note];
+      }
+      function yOnStaff(semi, bottomY, refSteps) {
+        return bottomY - (stepsFromC3(semi) - refSteps) * stepPx;
+      }
+
+      function drawStaffLines(bottomY) {
+        return [0, 2, 4, 6, 8].map(s => {
+          const y = bottomY - s * stepPx;
+          return `<line x1="${lineLeft}" y1="${y}" x2="${lineRight}" y2="${y}" stroke="#c5c5d5" stroke-width="1.4"/>`;
+        }).join('');
+      }
+
+      function drawNote(v, x, y, topLine, botLine) {
+        let svg = '';
+        if (y > botLine + 0.5) {
+          for (let ly = botLine + stepPx * 2; ly <= y + 0.5; ly += stepPx * 2) {
+            svg += `<line x1="${x - 11}" y1="${ly}" x2="${x + 11}" y2="${ly}" stroke="#c5c5d5" stroke-width="1.4"/>`;
+          }
+        }
+        if (y < topLine - 0.5) {
+          for (let ly = topLine - stepPx * 2; ly >= y - 0.5; ly -= stepPx * 2) {
+            svg += `<line x1="${x - 11}" y1="${ly}" x2="${x + 11}" y2="${ly}" stroke="#c5c5d5" stroke-width="1.4"/>`;
+          }
+        }
+        const acc = STAFF_ACC[v.note];
+        if (acc) {
+          svg += `<text x="${x - 16}" y="${y + 4}" fill="${noteColor}" font-size="15" font-family="Georgia,serif" text-anchor="middle">${acc}</text>`;
+        }
+        svg += `<ellipse cx="${x}" cy="${y}" rx="7.5" ry="5.4" fill="${noteColor}" transform="rotate(-18 ${x} ${y})"/>`;
+        return svg;
+      }
+
+      const trebleLines = drawStaffLines(trebleBottomY);
+      const bassLines = drawStaffLines(bassBottomY);
+      const trebleTop = trebleBottomY - 8 * stepPx;
+      const bassTop = bassBottomY - 8 * stepPx;
+
+      let notesSvg = '';
+      // Notes sit in the line span (after the clef)
+      const centerX = (lineLeft + lineRight) / 2;
+      const noteX0 = lineLeft + 28;
+      const noteGap = Math.min(26, voiced.length > 1 ? (lineRight - lineLeft - 50) / Math.max(1, voiced.length - 1) : 0);
+      const stackMode = !arpeggioMode;
+      const used = [];
+
+      const ordered = [...voiced].sort((a, b) => a.semi - b.semi);
+
+      ordered.forEach((v, i) => {
+        const onTreble = v.semi >= 12;
+        const y = onTreble
+          ? yOnStaff(v.semi, trebleBottomY, trebleRef)
+          : yOnStaff(v.semi, bassBottomY, bassRef);
+        let x;
+        if (stackMode) {
+          x = centerX;
+          for (const u of used) {
+            if (Math.abs(u.y - y) < stepPx * 1.05) x = centerX + 12;
+          }
+        } else {
+          x = noteX0 + (ordered.length === 1 ? 20 : i * noteGap);
+          for (const u of used) {
+            if (Math.abs(u.y - y) < stepPx * 0.9 && Math.abs(u.x - x) < 14) x += 12;
+          }
+        }
+        used.push({ x, y });
+        const top = onTreble ? trebleTop : bassTop;
+        const bot = onTreble ? trebleBottomY : bassBottomY;
+        notesSvg += drawNote(v, x, y, top, bot);
+      });
+
+      // Clefs sit in the reserved strip left of the staff lines
+      const clefX = sidePad + 2;
+      el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-label="Grand staff chord" style="display:block;margin:0 auto;">
+        ${trebleLines}
+        <text x="${clefX}" y="${trebleBottomY - 2 * stepPx + 9}" fill="#e2e8f0" font-size="40" font-family="Georgia,'Segoe UI Symbol',serif">𝄞</text>
+        ${bassLines}
+        <text x="${clefX}" y="${bassBottomY - 2 * stepPx + 6}" fill="#e2e8f0" font-size="32" font-family="Georgia,'Segoe UI Symbol',serif">𝄢</text>
+        ${notesSvg}
+      </svg>`;
+    }
+
+    function clearStaff() {
+      const el = document.getElementById('staff');
+      if (el) el.innerHTML = '';
+    }
+
+    function updateStaffLandscapeClass() {
+      const isLandscape = window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+      document.body.classList.toggle('staff-landscape', displayMode === 'staff' && isLandscape);
+      document.body.classList.toggle('staff-portrait', displayMode === 'staff' && !isLandscape);
+      document.body.classList.toggle('keyboard-landscape', displayMode === 'keyboard' && isLandscape);
+    }
+
+    function updateDisplayButtons() {
+      document.getElementById('showKeysBtn').classList.toggle('on', displayMode === 'keyboard');
+      document.getElementById('showStaffBtn').classList.toggle('on', displayMode === 'staff');
+    }
+
+    /** Show keyboard or grand staff (sound voicing unchanged).
+     *  Note letters: only with keyboard/staff, and in Test Me only with the chord-name reveal. */
+    function applyChordVisual(noteObjs, color) {
+      if (displayMode === 'none') {
+        notesEl.classList.remove('visible');
+        notesEl.textContent = '';
+        notesEl.style.opacity = '';
+        keyboardEl.classList.remove('visible');
+        staffEl.classList.remove('visible');
+        clearStaff();
+        updateStaffLandscapeClass();
+        return;
+      }
+      // In Test Me, note letters wait for the chord-name flash (not shown early)
+      if (testMode !== 'off') {
+        notesEl.classList.remove('visible');
+        notesEl.textContent = '';
+        notesEl.style.opacity = '';
+      } else if (noteObjs && noteObjs.length) {
+        notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
+        notesEl.classList.add('visible');
+        notesEl.style.opacity = '';
+      } else {
+        notesEl.classList.remove('visible');
+        notesEl.textContent = '';
+      }
+      if (displayMode === 'keyboard') {
+        // Test Me: neutral grey so key colour doesn't reveal the root
+        const hlColor = (testMode !== 'off') ? '#94a3b8' : color;
+        highlightKeys(noteObjs, hlColor);
+        keyboardEl.classList.add('visible');
+        staffEl.classList.remove('visible');
+        clearStaff();
+      } else {
+        keyboardEl.classList.remove('visible');
+        renderStaff(noteObjs, color);
+        staffEl.classList.add('visible');
+      }
+      updateStaffLandscapeClass();
+    }
+
     const chordEl = document.getElementById('chord');
     const chordInner = chordEl.querySelector('.chord-inner');
     const romanEl = document.getElementById('roman');
@@ -2304,6 +2877,7 @@
     const infoEl  = document.getElementById('info');
     const statusEl = document.getElementById('status');
     const keyboardEl = document.getElementById('keyboard');
+    const staffEl = document.getElementById('staff');
 
     let current = null;
     let paused = false;
@@ -2333,27 +2907,67 @@
                         currentPreset === 'basic' ? 'Triads Only' :
                         currentPreset === 'everything' ? 'All Chord Types' : 'Custom';
       const intStr = (intervalMs/1000) + 's';
-      statusEl.textContent = `${rootStr}  •  ${scaleStr}  •  ${presetStr}  •  ${intStr}`;
+      // Roman numeral degree selection (only meaningful with a single scale)
+      let romanStr = '';
+      if (canSelectRoman()) {
+        const primaryScale = [...enabledScales][0] || 'major';
+        const degrees = scales[primaryScale] || scales.major;
+        const selected = degrees.filter(d => enabledDegrees.has(d.deg));
+        if (selected.length > 0 && selected.length < degrees.length) {
+          romanStr = selected.map(d => d.label).join(', ');
+        } else if (selected.length === degrees.length) {
+          romanStr = 'All degrees';
+        }
+      }
+      const bits = [rootStr, scaleStr, presetStr, intStr];
+      if (romanStr) bits.splice(2, 0, romanStr); // after scale, before preset
+      statusEl.textContent = bits.join('  •  ');
+      updateInfo();
+    }
+
+    function updateInfo() {
+      if (typeof paused !== 'undefined' && paused) {
+        infoEl.textContent = 'Paused • Tap to resume';
+        return;
+      }
+      const parts = [];
+      parts.push('Tap to pause');
+      if (testMode === 'hear') parts.push('Test: Hear only');
+      else if (testMode === 'see') parts.push('Test: See staff');
+      else if (testMode === 'touch') parts.push('Test: Touch keys');
+      else if (displayMode === 'staff') parts.push('Staff');
+      else if (displayMode === 'keyboard') parts.push('Keyboard');
+      else parts.push('Symbol only');
+      if (arpeggioMode) parts.push('Arpeggiato');
+      if (metroEnabled) parts.push('Metronome');
+      if (motivateMode === 'carrot') parts.push('🥕');
+      else if (motivateMode === 'stick') parts.push('🏏');
+      infoEl.textContent = parts.join(' • ');
     }
 
     function updatePermanentDisplay() {
-      if (showKeysPermanently && current) {
+      if (displayMode !== 'none' && current) {
         const noteObjs = getNotesWithPositions(current.root, current.quality);
         const color = applyColor(current.root);
-        notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
-        notesEl.classList.add('visible');
-        highlightKeys(noteObjs, color);
-        keyboardEl.classList.add('visible');
+        applyChordVisual(noteObjs, color);
       } else if (!paused) {
+        applyChordVisual([], '#eaeaea');
+        // force hide when mode is none
         notesEl.classList.remove('visible');
         notesEl.textContent = '';
         keyboardEl.classList.remove('visible');
+        staffEl.classList.remove('visible');
+        clearStaff();
       }
     }
 
     function showChord() {
       chordEl.style.opacity = 0;
       romanEl.classList.remove('visible');
+      // Test Me forces the visual channel for each flash
+      if (testMode === 'hear') displayMode = 'none';
+      else if (testMode === 'see') displayMode = 'staff';
+      else if (testMode === 'touch') displayMode = 'keyboard';
       setTimeout(() => {
         current = randomChord();
         chordsSinceResume++;
@@ -2392,56 +3006,103 @@
             }, 220);
           }
         }
-        // 100 chords total: legendary confetti
-        if (totalChordsPlayed === 100 && !legendaryEggPlayed) {
-          legendaryEggPlayed = true;
-          setTimeout(() => triggerLegendaryEgg(), 400);
-        }
-        // 30 arpeggiato chords: wrists are soup
-        if (arpeggioMode && arpeggioChordCount === 30 && !wristSoupPlayed) {
-          wristSoupPlayed = true;
-          setTimeout(() => triggerWristSoupEgg(), 300);
-        }
-        // Rare random: WRONG → jk (mode-flavoured if active)
-        if (Math.random() < 0.01) {
-          setTimeout(() => {
-            if (motivateMode === 'stick') {
-              flashScreenTint('stick');
+        // Motivation easter-egg graphics only when carrot or stick is selected
+        if (motivateMode === 'carrot' || motivateMode === 'stick') {
+          // 100 chords total: legendary confetti
+          if (totalChordsPlayed === 100 && !legendaryEggPlayed) {
+            legendaryEggPlayed = true;
+            setTimeout(() => triggerLegendaryEgg(), 400);
+          }
+          // 30 arpeggiato chords: wrists are soup
+          if (arpeggioMode && arpeggioChordCount === 30 && !wristSoupPlayed) {
+            wristSoupPlayed = true;
+            setTimeout(() => triggerWristSoupEgg(), 300);
+          }
+          // Rare random: WRONG → jk
+          if (Math.random() < 0.01) {
+            setTimeout(() => {
+              flashScreenTint(motivateMode);
               triggerJkFlash();
-            } else if (motivateMode === 'carrot') {
-              flashScreenTint('carrot');
-              triggerJkFlash();
-            } else {
-              triggerJkFlash();
-            }
-          }, 200);
-        }
-
-        chordInner.textContent = current.name;
-        applyColor(current.root);
-        applyShape(current.quality);
-        chordEl.style.opacity = 1;
-
-        if (canShowRoman() && current.roman) {
-          romanEl.textContent = current.roman;
-          romanEl.classList.add('visible');
-        } else {
-          romanEl.textContent = '';
-          romanEl.classList.remove('visible');
+            }, 200);
+          }
         }
 
         const noteObjs = getNotesWithPositions(current.root, current.quality);
         playPianoChord(noteObjs);
+        // Visual aid first (keyboard / staff / none) — Test Me may hide the symbol
+        applyChordVisual(noteObjs, rootColors[current.root] || '#eaeaea');
 
-        if (showKeysPermanently) {
-          notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
-          notesEl.classList.add('visible');
-          highlightKeys(noteObjs, rootColors[current.root] || '#eaeaea');
-          keyboardEl.classList.add('visible');
+        clearTimeout(testRevealTimer);
+        clearTimeout(testDriftTimer);
+        testRevealTimer = null;
+        testDriftTimer = null;
+
+        if (testMode === 'off') {
+          chordInner.textContent = current.name;
+          applyColor(current.root);
+          applyShape(current.quality);
+          chordEl.style.transition = 'opacity 0.15s, color 0.2s';
+          chordEl.style.opacity = 1;
+          romanEl.style.transition = 'opacity 0.25s';
+          notesEl.style.transition = 'opacity 0.25s';
+          romanEl.style.opacity = '';
+          notesEl.style.opacity = '';
+          if (canShowRoman() && current.roman) {
+            romanEl.textContent = current.roman;
+            romanEl.classList.add('visible');
+          } else {
+            romanEl.textContent = '';
+            romanEl.classList.remove('visible');
+          }
         } else {
-          notesEl.classList.remove('visible');
-          notesEl.textContent = '';
-          keyboardEl.classList.remove('visible');
+          // Do not interrupt a fade still running from the previous chord.
+          // Answer text updates only at reveal so the old name can finish fading.
+          // Reveal at 75%; fade lasts 75% of interval → ends 50% into the *next* chord.
+          const revealMs = Math.max(80, intervalMs * 0.75 - CHORD_ONSET_DELAY_MS);
+          const fadeMs = Math.max(240, intervalMs * 0.75);
+          const revealed = current;
+          const revealedNotes = noteObjs;
+          testRevealTimer = setTimeout(() => {
+            if (paused || !current || current !== revealed) return;
+            chordInner.textContent = revealed.name;
+            applyColor(revealed.root);
+            applyShape(revealed.quality);
+            chordEl.style.transition = 'opacity 0.1s ease-out, color 0.2s';
+            romanEl.style.transition = 'opacity 0.1s ease-out';
+            notesEl.style.transition = 'opacity 0.1s ease-out';
+            romanEl.style.opacity = '';
+            notesEl.style.opacity = '';
+            chordEl.style.opacity = 1;
+            if (canShowRoman() && revealed.roman) {
+              romanEl.textContent = revealed.roman;
+              romanEl.classList.add('visible');
+            } else {
+              romanEl.textContent = '';
+              romanEl.classList.remove('visible');
+            }
+            // Note letters only with keyboard or staff
+            if (displayMode === 'keyboard' || displayMode === 'staff') {
+              notesEl.textContent = revealedNotes.map(n => n.note).join('  •  ');
+              notesEl.classList.add('visible');
+            } else {
+              notesEl.classList.remove('visible');
+              notesEl.textContent = '';
+            }
+
+            // Fade chord / Roman / notes together (notes only if visible)
+            testDriftTimer = setTimeout(() => {
+              if (paused) return;
+              const fade = `opacity ${fadeMs}ms linear`;
+              chordEl.style.transition = fade + ', color 0.2s';
+              romanEl.style.transition = fade;
+              notesEl.style.transition = fade;
+              requestAnimationFrame(() => {
+                chordEl.style.opacity = '0';
+                romanEl.style.opacity = '0';
+                if (notesEl.classList.contains('visible')) notesEl.style.opacity = '0';
+              });
+            }, 60);
+          }, revealMs);
         }
 
       }, 180);
@@ -2449,12 +3110,189 @@
 
     function startFlashing() {
       stopFlashing();
+      // Shared phase origin for chords + metronome (wall clock)
+      chordPhaseOriginMs = performance.now();
       showChord();
       timer = setInterval(showChord, intervalMs);
+      // Metronome only runs while chords are flashing
+      if (metroEnabled) startMetronome();
     }
     function stopFlashing() {
       clearInterval(timer);
       timer = null;
+      clearTimeout(testRevealTimer);
+      clearTimeout(testDriftTimer);
+      testRevealTimer = null;
+      testDriftTimer = null;
+      stopMetronome();
+    }
+
+    function updateTestButtonLabel() {
+      const labels = {
+        off: '🧪 Test Me ▾',
+        hear: '🧪 👂 Hear ▾',
+        see: '🧪 👀 See ▾',
+        touch: '🧪 👆 Touch ▾'
+      };
+      const btn = document.getElementById('testMeToggle');
+      if (btn) {
+        btn.textContent = labels[testMode] || labels.off;
+        btn.classList.toggle('live', testMode !== 'off');
+      }
+      // Sync dropdown option highlights
+      document.querySelectorAll('#testMeDropdown button[data-mode]').forEach(b => {
+        b.classList.toggle('on', b.dataset.mode === testMode);
+      });
+    }
+
+    function buildTestModeChips() {
+      // Floating Test Me menu is static HTML; keep for API compat
+      updateTestButtonLabel();
+    }
+
+    function setTestMode(mode) {
+      if (testMode === 'off' && mode !== 'off') {
+        displayModeBeforeTest = displayMode;
+      }
+      testMode = mode;
+      if (mode === 'hear') {
+        displayMode = 'none';
+      } else if (mode === 'see') {
+        displayMode = 'staff';
+      } else if (mode === 'touch') {
+        displayMode = 'keyboard';
+      } else {
+        displayMode = displayModeBeforeTest || 'keyboard';
+      }
+      updateTestButtonLabel();
+      updateDisplayButtons();
+      updatePermanentDisplay();
+      updateInfo();
+      if (!paused && typeof landingDismissed !== 'undefined' && landingDismissed) {
+        startFlashing();
+      }
+    }
+
+    // ——— Metronome (timing locked to chord Interval setting) ———
+    // Must match the delay inside showChord before playPianoChord runs
+    const CHORD_ONSET_DELAY_MS = 180;
+
+    function playMetroClick(accent) {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = accent ? 1200 : 880;
+      const g = metroVolume * (accent ? 0.55 : 0.35);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(g, now + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    }
+
+    function stopMetronome() {
+      if (metroTimer) {
+        clearTimeout(metroTimer);
+        metroTimer = null;
+      }
+      metroNextTick = 0;
+      metroBeatCount = 0;
+    }
+
+    function scheduleMetroTick() {
+      // Only tick while flashing is active and metro is enabled
+      if (!metroEnabled || !timer) return;
+      const clicks = Math.max(1, Math.min(8, metroClicksPerInterval));
+      const clickSec = (intervalMs / 1000) / clicks;
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      // Catch up while preserving phase (do NOT snap to now — that desyncs from chord onset)
+      while (metroNextTick < now - 0.02) {
+        metroNextTick += clickSec;
+        metroBeatCount++;
+      }
+      // Look-ahead scales with click spacing
+      const lookAhead = Math.min(0.5, Math.max(0.2, clickSec * 0.4));
+      while (metroNextTick < now + lookAhead) {
+        const delay = Math.max(0, (metroNextTick - now) * 1000);
+        const beat = metroBeatCount;
+        // Accent the first click of each chord interval (= chord attack)
+        setTimeout(() => {
+          if (metroEnabled && timer) playMetroClick(beat % clicks === 0);
+        }, delay);
+        metroBeatCount++;
+        metroNextTick += clickSec;
+      }
+      metroTimer = setTimeout(scheduleMetroTick, Math.min(200, (intervalMs / clicks) / 2));
+    }
+
+    function startMetronome() {
+      stopMetronome();
+      if (!metroEnabled || !timer) return;
+      const ctx = getAudioContext();
+      const clicks = Math.max(1, Math.min(8, metroClicksPerInterval));
+      const clickMs = intervalMs / clicks;
+      const nowPerf = performance.now();
+      // Chord sounds land at origin + CHORD_ONSET_DELAY_MS, then every intervalMs.
+      // Lock the accented click (beat % clicks === 0) to those onsets.
+      const firstOnsetPerf = chordPhaseOriginMs + CHORD_ONSET_DELAY_MS;
+      let nextBeatIndex;
+      let delayMs;
+      if (nowPerf <= firstOnsetPerf + 1) {
+        nextBeatIndex = 0;
+        delayMs = firstOnsetPerf - nowPerf;
+      } else {
+        const elapsed = nowPerf - firstOnsetPerf;
+        // Next beat boundary at or after now (ceil), so we never fire late relative to phase
+        nextBeatIndex = Math.ceil(elapsed / clickMs - 1e-9);
+        delayMs = firstOnsetPerf + nextBeatIndex * clickMs - nowPerf;
+      }
+      // If somehow negative due to clock jitter, push one click forward
+      if (delayMs < 0) {
+        nextBeatIndex++;
+        delayMs = firstOnsetPerf + nextBeatIndex * clickMs - nowPerf;
+      }
+      metroBeatCount = nextBeatIndex;
+      metroNextTick = ctx.currentTime + Math.max(0, delayMs) / 1000;
+      scheduleMetroTick();
+    }
+
+    function setMetroEnabled(on) {
+      metroEnabled = on;
+      const btn = document.getElementById('metroBtn');
+      const volRow = document.getElementById('metroVolRow');
+      btn.classList.toggle('on', on);
+      volRow.style.display = on ? 'flex' : 'none';
+      // Only start if chords are currently flashing — phase uses chordPhaseOriginMs
+      if (on && timer) startMetronome();
+      else stopMetronome();
+      updateInfo();
+    }
+
+    function buildMetroClicksChips() {
+      const box = document.getElementById('metroClicks');
+      if (!box) return;
+      box.innerHTML = '';
+      [1, 2, 3, 4, 5, 6, 7, 8].forEach(n => {
+        const chip = document.createElement('button');
+        chip.className = 'interval-chip' + (metroClicksPerInterval === n ? ' on' : '');
+        chip.textContent = String(n);
+        chip.title = n + ' click' + (n > 1 ? 's' : '') + ' per interval';
+        chip.addEventListener('click', e => {
+          e.stopPropagation();
+          metroClicksPerInterval = n;
+          box.querySelectorAll('.interval-chip').forEach(c => c.classList.remove('on'));
+          chip.classList.add('on');
+          document.getElementById('metroClicksBtn').textContent = 'Clicks ' + n + ' ▾';
+          // Re-lock to existing chord phase (do not restart chord cycle)
+          if (metroEnabled && timer) startMetronome();
+        });
+        box.appendChild(chip);
+      });
     }
 
     function updatePresetButtons() {
@@ -2470,21 +3308,30 @@
       currentPreset = 'default';
       intervalMs = 3000;
       arpeggioMode = true;
-      showKeysPermanently = true;
+      displayMode = 'keyboard';
+      displayModeBeforeTest = 'keyboard';
+      metroClicksPerInterval = 4;
+      setMetroEnabled(false);
+      // Reset also turns Test Me off
+      testMode = 'off';
 
       document.getElementById('arpeggioBtn').classList.add('on', 'arpeggio');
-      document.getElementById('showKeysBtn').classList.add('on');
       document.getElementById('intervalBtn').textContent = 'Interval 3s ▾';
+      document.getElementById('metroClicksBtn').textContent = 'Clicks 4 ▾';
+      updateDisplayButtons();
+      updateTestButtonLabel();
 
       buildRootChips();
       buildScaleChips();
       buildTypeChips();
       buildDegreeChips();
       buildIntervalChips();
+      buildMetroClicksChips();
       updateRomanDropdownState();
       updatePresetButtons();
       updateStatus();
       updatePermanentDisplay();
+      updateInfo();
     }
 
     function applyTriadsOnly() {
@@ -2755,9 +3602,23 @@
 
     document.getElementById('showKeysBtn').addEventListener('click', e => {
       e.stopPropagation();
-      showKeysPermanently = !showKeysPermanently;
-      document.getElementById('showKeysBtn').classList.toggle('on', showKeysPermanently);
+      displayMode = displayMode === 'keyboard' ? 'none' : 'keyboard';
+      updateDisplayButtons();
       updatePermanentDisplay();
+      updateInfo();
+    });
+
+    document.getElementById('showStaffBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      displayMode = displayMode === 'staff' ? 'none' : 'staff';
+      updateDisplayButtons();
+      updatePermanentDisplay();
+      updateInfo();
+    });
+
+    window.addEventListener('resize', () => updateStaffLandscapeClass());
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateStaffLandscapeClass, 50);
     });
 
     document.getElementById('arpeggioBtn').addEventListener('click', e => {
@@ -2765,37 +3626,42 @@
       arpeggioMode = !arpeggioMode;
       document.getElementById('arpeggioBtn').classList.toggle('on', arpeggioMode);
       document.getElementById('arpeggioBtn').classList.toggle('arpeggio', arpeggioMode);
+      // Restack / spread notes on staff immediately
+      if (displayMode === 'staff') updatePermanentDisplay();
+      updateInfo();
     });
 
     document.getElementById('motivateEnableBtn').addEventListener('click', e => {
       e.stopPropagation();
-      setMotivateEnabled(!motivateEnabled);
-    });
-
-    const motivateWrap = document.getElementById('motivateWrap');
-    const motivateToggle = document.getElementById('motivateToggle');
-    motivateToggle.addEventListener('click', e => {
-      e.stopPropagation();
-      motivateWrap.classList.toggle('open');
-      motivateToggle.classList.toggle('active', motivateWrap.classList.contains('open'));
+      setMotivateChoice(null); // Off
+      bumpPanelAutoClose();
     });
     document.getElementById('carrotBtn').addEventListener('click', e => {
       e.stopPropagation();
-      motivateWrap.classList.remove('open');
-      motivateToggle.classList.remove('active');
-      startMotivateMode('carrot');
+      setMotivateChoice('carrot');
+      bumpPanelAutoClose();
     });
     document.getElementById('stickBtn').addEventListener('click', e => {
       e.stopPropagation();
-      motivateWrap.classList.remove('open');
-      motivateToggle.classList.remove('active');
-      startMotivateMode('stick');
+      setMotivateChoice('stick');
+      bumpPanelAutoClose();
     });
-    document.getElementById('motivateStopBtn').addEventListener('click', e => {
+
+    // Floating Test Me control
+    const testMeWrap = document.getElementById('testMeWrap');
+    const testMeToggle = document.getElementById('testMeToggle');
+    testMeToggle.addEventListener('click', e => {
       e.stopPropagation();
-      motivateWrap.classList.remove('open');
-      motivateToggle.classList.remove('active');
-      stopMotivateLoop();
+      testMeWrap.classList.toggle('open');
+      testMeToggle.classList.toggle('open', testMeWrap.classList.contains('open'));
+    });
+    document.querySelectorAll('#testMeDropdown button[data-mode]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        setTestMode(btn.dataset.mode);
+        testMeWrap.classList.remove('open');
+        testMeToggle.classList.remove('open');
+      });
     });
 
     const volSlider = document.getElementById('volumeSlider');
@@ -2806,6 +3672,62 @@
       volValue.textContent = volSlider.value;
     });
     volSlider.addEventListener('click', e => e.stopPropagation());
+
+    const metroVolSlider = document.getElementById('metroVolSlider');
+    const metroVolValue = document.getElementById('metroVolValue');
+    metroVolSlider.addEventListener('input', e => {
+      e.stopPropagation();
+      metroVolume = Number(metroVolSlider.value) / 100;
+      metroVolValue.textContent = metroVolSlider.value;
+    });
+    metroVolSlider.addEventListener('click', e => e.stopPropagation());
+
+    document.getElementById('soundBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      soundMode = soundMode === 'piano' ? 'synth' : 'piano';
+      const btn = document.getElementById('soundBtn');
+      btn.textContent = soundMode === 'piano' ? 'Piano' : 'Synth';
+      btn.classList.toggle('on', soundMode === 'piano');
+      if (soundMode === 'piano') loadPianoSamples();
+    });
+
+    document.getElementById('metroBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      setMetroEnabled(!metroEnabled);
+    });
+
+    // Auto-minimise settings panel and dropdowns after idle
+    const AUTO_CLOSE_MS = 7000;
+    let panelAutoCloseTimer = null;
+    let dropdownAutoCloseTimer = null;
+
+    function clearPanelAutoClose() {
+      if (panelAutoCloseTimer) {
+        clearTimeout(panelAutoCloseTimer);
+        panelAutoCloseTimer = null;
+      }
+    }
+    function clearDropdownAutoClose() {
+      if (dropdownAutoCloseTimer) {
+        clearTimeout(dropdownAutoCloseTimer);
+        dropdownAutoCloseTimer = null;
+      }
+    }
+    function bumpPanelAutoClose() {
+      clearPanelAutoClose();
+      if (!bottomPanel || !bottomPanel.classList.contains('open')) return;
+      panelAutoCloseTimer = setTimeout(() => {
+        setPanelOpen(false);
+      }, AUTO_CLOSE_MS);
+    }
+    function bumpDropdownAutoClose() {
+      clearDropdownAutoClose();
+      const anyOpen = document.querySelector('.dropdown.open');
+      if (!anyOpen) return;
+      dropdownAutoCloseTimer = setTimeout(() => {
+        closeAllDropdowns();
+      }, AUTO_CLOSE_MS);
+    }
 
     function closeAllDropdowns() {
       document.querySelectorAll('.dropdown-panel').forEach(panel => {
@@ -2818,6 +3740,7 @@
         }
       });
       document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+      clearDropdownAutoClose();
     }
 
     function setupDropdown(btnId, dropId) {
@@ -2830,22 +3753,32 @@
         if (btn.classList.contains('disabled')) return;
         const wasOpen = drop.classList.contains('open');
         closeAllDropdowns();
+        bumpPanelAutoClose();
         if (!wasOpen) {
           // Port panel to body so fixed positioning isn't trapped by #bottom transform
           document.body.appendChild(panel);
           panel.dataset.ported = '1';
           drop.classList.add('open');
           panel.style.display = 'flex';
+          bumpDropdownAutoClose();
         }
       });
       // clicks inside ported panel shouldn't close it or bubble to body pause
-      panel.addEventListener('click', e => e.stopPropagation());
+      panel.addEventListener('click', e => {
+        e.stopPropagation();
+        bumpDropdownAutoClose();
+        bumpPanelAutoClose();
+      });
     }
     setupDropdown('rootBtn', 'rootDropdown');
     setupDropdown('scaleBtn', 'scaleDropdown');
     setupDropdown('typeBtn', 'typeDropdown');
     setupDropdown('degBtn', 'degDropdown');
     setupDropdown('intervalBtn', 'intervalDropdown');
+    setupDropdown('metroClicksBtn', 'metroClicksDropdown');
+    buildMetroClicksChips();
+    updateTestButtonLabel();
+    updateMotivateButtons();
 
     document.addEventListener('click', () => {
       closeAllDropdowns();
@@ -2857,6 +3790,7 @@
     document.getElementById('bottom').addEventListener('click', e => {
       // only stop propagation for non-dropdown clicks so body pause works outside
       if (!e.target.closest('.dropdown')) e.stopPropagation();
+      bumpPanelAutoClose();
     });
 
     const settingsToggle = document.getElementById('settingsToggle');
@@ -2865,7 +3799,12 @@
       bottomPanel.classList.toggle('open', open);
       settingsToggle.classList.toggle('open', open);
       settingsToggle.setAttribute('aria-label', open ? 'Close settings' : 'Open settings');
-      if (!open) closeAllDropdowns();
+      if (!open) {
+        closeAllDropdowns();
+        clearPanelAutoClose();
+      } else {
+        bumpPanelAutoClose();
+      }
     }
     settingsToggle.addEventListener('click', e => {
       e.stopPropagation();
@@ -2876,7 +3815,9 @@
     applyColor(current.root);
     applyShape(current.quality);
     // Don't start flashing/composers until landing is dismissed
-    setMotivateEnabled(true); // on by default (button visible; mode starts when user picks)
+    // Motivate default: Off (exclusive Off / Carrot / Stick)
+    setMotivateChoice(null);
+    updateInfo();
 
     let landingDismissed = false;
     const landingEl = document.getElementById('landing');
@@ -2899,16 +3840,99 @@
       dismissLanding();
     }, { passive: false });
 
+    function enterPausedState() {
+      if (paused) return;
+      stopFlashing();
+      paused = true;
+      if (current) {
+        forceNextChord = {...current};
+        forceInThree = {...current};
+        chordsSinceResume = 0;
+        const noteObjs = getNotesWithPositions(current.root, current.quality);
+        const color = applyColor(current.root);
+        chordEl.style.transition = 'opacity 0.15s, color 0.2s';
+        chordEl.style.transform = '';
+        chordEl.style.opacity = 1; // always show symbol when paused (incl. Test Me)
+        romanEl.style.opacity = '';
+        notesEl.style.opacity = '';
+        romanEl.style.transition = 'opacity 0.25s';
+        notesEl.style.transition = 'opacity 0.25s';
+        if (canShowRoman() && current.roman) {
+          romanEl.textContent = current.roman;
+          romanEl.classList.add('visible');
+        } else {
+          romanEl.textContent = '';
+          romanEl.classList.remove('visible');
+        }
+        // While paused always reveal the chord visual (prefer current mode; keyboard if off)
+        const mode = displayMode === 'none' ? 'keyboard' : displayMode;
+        if (mode === 'staff' || mode === 'keyboard') {
+          notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
+          notesEl.classList.add('visible');
+        } else {
+          notesEl.classList.remove('visible');
+          notesEl.textContent = '';
+        }
+        if (mode === 'staff') {
+          keyboardEl.classList.remove('visible');
+          renderStaff(noteObjs, color);
+          staffEl.classList.add('visible');
+        } else {
+          staffEl.classList.remove('visible');
+          clearStaff();
+          highlightKeys(noteObjs, color);
+          keyboardEl.classList.add('visible');
+        }
+        // Layout classes from live displayMode; force keyboard layout when pause reveals keys
+        updateStaffLandscapeClass();
+        const isLandscape = window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+        if (mode === 'keyboard' && isLandscape) {
+          document.body.classList.add('keyboard-landscape');
+          document.body.classList.remove('staff-landscape');
+        }
+      }
+      updateInfo();
+    }
+
+    function silenceAudio() {
+      stopMetronome();
+      if (audioCtx && audioCtx.state === 'running') {
+        audioCtx.suspend().catch(() => {});
+      }
+    }
+
+    // Pause + silence when tab/app is hidden so nothing plays in the background
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (!landingDismissed) return;
+        enterPausedState();
+        silenceAudio();
+        stopComposerLoop();
+      }
+      // On return: stay paused until user taps; do not auto-resume sound
+    });
+    window.addEventListener('pagehide', () => {
+      if (!landingDismissed) return;
+      enterPausedState();
+      silenceAudio();
+      stopComposerLoop();
+    });
+    window.addEventListener('freeze', () => {
+      if (!landingDismissed) return;
+      enterPausedState();
+      silenceAudio();
+    });
+
     document.body.addEventListener('click', e => {
       if (!landingDismissed) return;
       // Ignore residual events from the landing screen
       if (e.target.closest('#landing')) return;
       if (e.target.closest('#bottom') || e.target.closest('#settingsToggle')) return;
-      if (e.target.closest('#motivateWrap')) return;
-      // Close motivate dropdown if open
-      if (motivateWrap.classList.contains('open')) {
-        motivateWrap.classList.remove('open');
-        motivateToggle.classList.remove('active');
+      if (e.target.closest('#testMeWrap')) return;
+      // Close Test Me dropdown if open
+      if (testMeWrap.classList.contains('open')) {
+        testMeWrap.classList.remove('open');
+        testMeToggle.classList.remove('open');
         return;
       }
       // Close settings panel if open
@@ -2918,35 +3942,19 @@
       }
       getAudioContext();
       if (!paused) {
-        stopFlashing();
-        paused = true;
-        forceNextChord = {...current};
-        forceInThree = {...current};
-        chordsSinceResume = 0;
-
-        const noteObjs = getNotesWithPositions(current.root, current.quality);
-        const color = applyColor(current.root);
-        notesEl.textContent = noteObjs.map(n => n.note).join('  •  ');
-        notesEl.classList.add('visible');
-        if (canShowRoman() && current.roman) {
-          romanEl.textContent = current.roman;
-          romanEl.classList.add('visible');
-        } else {
-          romanEl.textContent = '';
-          romanEl.classList.remove('visible');
-        }
-        highlightKeys(noteObjs, color);
-        keyboardEl.classList.add('visible');
-        infoEl.textContent = 'Paused • Tap to resume';
+        enterPausedState();
       } else {
         paused = false;
-        if (!showKeysPermanently) {
+        if (displayMode === 'none') {
           notesEl.classList.remove('visible');
           notesEl.textContent = '';
           keyboardEl.classList.remove('visible');
+          staffEl.classList.remove('visible');
+          clearStaff();
         }
         romanEl.classList.remove('visible');
-        infoEl.textContent = 'Tap to pause • Show notes + keyboard';
+        updateInfo();
+        startComposerLoop();
         startFlashing();
       }
     });
@@ -2988,3 +3996,4 @@
   </script>
 </body>
 </html>
+
